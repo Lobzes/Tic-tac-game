@@ -290,89 +290,6 @@ function highlightWinningCells(combination) {
     });
 }
 
-// Handle victory
-function handleVictory() {
-    const promoCode = generatePromoCode();
-    promoCodeElement.textContent = promoCode;
-    showModal(victoryModal);
-    sendTelegramMessage(`🎉 Победа! Промокод выдан: ${promoCode}`);
-}
-
-// Handle defeat
-function handleDefeat() {
-    showModal(defeatModal);
-    sendTelegramMessage('😔 Проигрыш. Попробуйте ещё раз!');
-}
-
-// Handle draw
-function handleDraw() {
-    showModal(drawModal);
-}
-
-// Generate random 5-digit promo code
-function generatePromoCode() {
-    const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
-    let code = '';
-    for (let i = 0; i < 5; i++) {
-        code += characters.charAt(Math.floor(Math.random() * characters.length));
-    }
-    return code;
-}
-
-// Copy promo code to clipboard
-function copyPromoCode() {
-    const code = promoCodeElement.textContent;
-    navigator.clipboard.writeText(code).then(() => {
-        copyPromoBtn.innerHTML = '<span>Скопировано! ✓</span>';
-        setTimeout(() => {
-            copyPromoBtn.innerHTML = '<span>Скопировать промокод</span>';
-        }, 2000);
-    }).catch(err => {
-        console.error('Failed to copy:', err);
-    });
-}
-
-// Send message to Telegram
-async function sendTelegramMessage(message) {
-    if (!botToken || !chatId) {
-        console.warn('⚠️ Telegram settings not configured');
-        return;
-    }
-
-    const url = `https://api.telegram.org/bot${botToken}/sendMessage`;
-
-    try {
-        console.log(`📤 Sending message to Chat ID: ${chatId}`);
-
-        const response = await fetch(url, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-                chat_id: chatId,
-                text: message,
-                parse_mode: 'HTML'
-            })
-        });
-
-        if (!response.ok) {
-            const errorData = await response.json();
-            throw new Error(`Failed to send message: ${errorData.description}`);
-        }
-
-        console.log('✅ Telegram message sent successfully!');
-    } catch (error) {
-        console.error('❌ Error sending Telegram message:', error);
-    }
-}
-
-// Show modal
-function showModal(modal) {
-    modal.classList.add('show');
-}
-
-// Close modal
 function closeModal(modal) {
     modal.classList.remove('show');
 }
@@ -394,3 +311,4 @@ function resetGame() {
 
 // Initialize game on page load
 init();
+
