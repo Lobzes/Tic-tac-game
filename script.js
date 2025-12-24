@@ -3,8 +3,6 @@ let board = ['', '', '', '', '', '', '', '', ''];
 let currentPlayer = 'X'; // X - player, O - computer
 let gameActive = true;
 let computerThinking = false; // Flag to prevent player moves while computer is thinking
-let botToken = '';
-let chatId = '';
 
 // DOM Elements
 const cells = document.querySelectorAll('.cell');
@@ -19,11 +17,6 @@ const playAgainDefeatBtn = document.getElementById('play-again-defeat-btn');
 const playAgainDrawBtn = document.getElementById('play-again-draw-btn');
 const playerCard = document.getElementById('player-card');
 const computerCard = document.getElementById('computer-card');
-const settingsToggle = document.getElementById('settings-toggle');
-const settingsContent = document.getElementById('settings-content');
-const saveSettingsBtn = document.getElementById('save-settings-btn');
-const botTokenInput = document.getElementById('bot-token');
-const chatIdInput = document.getElementById('chat-id');
 
 // Winning combinations
 const winningCombinations = [
@@ -39,7 +32,18 @@ const winningCombinations = [
 
 // Initialize game
 function init() {
-    loadSettings();
+    // Initialize Telegram Web App features
+    const tg = window.Telegram?.WebApp;
+    if (tg) {
+        tg.expand();
+        tg.enableClosingConfirmation();
+        // Set theme colors
+        if (tg.themeParams) {
+            document.documentElement.style.setProperty('--tg-theme-bg-color', tg.themeParams.bg_color || '#faf8ff');
+            document.documentElement.style.setProperty('--tg-theme-text-color', tg.themeParams.text_color || '#2d3748');
+        }
+    }
+
     cells.forEach(cell => {
         cell.addEventListener('click', handleCellClick);
     });
@@ -57,88 +61,6 @@ function init() {
         closeModal(drawModal);
         resetGame();
     });
-    settingsToggle.addEventListener('click', toggleSettings);
-    saveSettingsBtn.addEventListener('click', saveSettings);
-}
-
-// Load settings from localStorage or Telegram Web App
-function loadSettings() {
-    // Initialize Telegram Web App
-    const tg = window.Telegram?.WebApp;
-
-    // Bot Token (remains the same for all users)
-    const defaultBotToken = '8390679003:AAHc5Xl5rqLjUG4k4bWw-zSSg2wTupJLsMI';
-
-    // Check if running inside Telegram
-    if (tg && tg.initDataUnsafe && tg.initDataUnsafe.user) {
-        // Get Chat ID from Telegram Web App
-        const telegramUser = tg.initDataUnsafe.user;
-        chatId = telegramUser.id.toString();
-
-        console.log('✅ Telegram Web App detected!');
-        console.log('👤 User:', telegramUser.first_name, telegramUser.last_name);
-        console.log('🆔 Chat ID:', chatId);
-
-        // Expand the Web App to full height
-        tg.expand();
-
-        // Enable closing confirmation
-        tg.enableClosingConfirmation();
-
-        // Set theme colors
-        if (tg.themeParams) {
-            document.documentElement.style.setProperty('--tg-theme-bg-color', tg.themeParams.bg_color || '#faf8ff');
-            document.documentElement.style.setProperty('--tg-theme-text-color', tg.themeParams.text_color || '#2d3748');
-        }
-    } else {
-        // Fallback: Load from localStorage or use default for testing
-        const savedChatId = localStorage.getItem('telegram_chat_id');
-
-        if (savedChatId) {
-            chatId = savedChatId;
-        } else {
-            // For testing outside Telegram - use default
-            chatId = '589695442';
-            console.warn('⚠️ Running outside Telegram. Using default Chat ID for testing.');
-        }
-    }
-
-    // Always use the same bot token
-    const savedBotToken = localStorage.getItem('telegram_bot_token');
-    if (savedBotToken) {
-        botToken = savedBotToken;
-    } else {
-        botToken = defaultBotToken;
-        localStorage.setItem('telegram_bot_token', defaultBotToken);
-    }
-
-    // Update input fields
-    botTokenInput.value = botToken;
-    chatIdInput.value = chatId;
-
-    // Save Chat ID to localStorage
-    localStorage.setItem('telegram_chat_id', chatId);
-}
-
-// Save settings to localStorage
-function saveSettings() {
-    botToken = botTokenInput.value.trim();
-    chatId = chatIdInput.value.trim();
-
-    localStorage.setItem('telegram_bot_token', botToken);
-    localStorage.setItem('telegram_chat_id', chatId);
-
-    // Show feedback
-    saveSettingsBtn.textContent = 'Сохранено! ✓';
-    setTimeout(() => {
-        saveSettingsBtn.textContent = 'Сохранить';
-        settingsContent.classList.remove('show');
-    }, 1500);
-}
-
-// Toggle settings panel
-function toggleSettings() {
-    settingsContent.classList.toggle('show');
 }
 
 // Handle cell click
@@ -290,6 +212,69 @@ function highlightWinningCells(combination) {
     });
 }
 
+// Handle victory
+function handleVictory() {
+    const promoCode = generatePromoCode();
+    promoCodeElement.textContent = promoCode;
+    showModal(victoryModal);
+
+    // SECURE WAY: Send data to the bot, let the bot send the message
+    if (window.Telegram?.WebApp) {
+        const data = JSON.stringify({
+            type: 'victory',
+            promo: promoCode
+        });
+        window.Telegram.WebApp.sendData(data);
+    }
+}
+
+// Handle defeat
+function handleDefeat() {
+    showModal(defeatModal);
+
+    // SECURE WAY: Send data to the bot
+    if (window.Telegram?.WebApp) {
+        const data = JSON.stringify({
+            type: 'defeat'
+        });
+        window.Telegram.WebApp.sendData(data);
+    }
+}
+
+// Handle draw
+function handleDraw() {
+    showModal(drawModal);
+}
+
+// Generate random 5-digit promo code
+function generatePromoCode() {
+    const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+    let code = '';
+    for (let i = 0; i < 5; i++) {
+        code += characters.charAt(Math.floor(Math.random() * characters.length));
+    }
+    return code;
+}
+
+// Copy promo code to clipboard
+function copyPromoCode() {
+    const code = promoCodeElement.textContent;
+    navigator.clipboard.writeText(code).then(() => {
+        copyPromoBtn.innerHTML = '<span>Скопировано! ✓</span>';
+        setTimeout(() => {
+            copyPromoBtn.innerHTML = '<span>Скопировать промокод</span>';
+        }, 2000);
+    }).catch(err => {
+        console.error('Failed to copy:', err);
+    });
+}
+
+// Show modal
+function showModal(modal) {
+    modal.classList.add('show');
+}
+
+// Close modal
 function closeModal(modal) {
     modal.classList.remove('show');
 }
