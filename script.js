@@ -1,78 +1,94 @@
 // Game State
-let board = ['', '', '', '', '', '', '', '', ''];
-let currentPlayer = 'X'; // X - player, O - computer
-let gameActive = true;
-let computerThinking = false; // Flag to prevent player moves while computer is thinking
+var board = ['', '', '', '', '', '', '', '', ''];
+var currentPlayer = 'X'; // X - player, O - computer
+var gameActive = true;
+var computerThinking = false;
 
 // DOM Elements
-const cells = document.querySelectorAll('.cell');
-const resetBtn = document.getElementById('reset-btn');
-const victoryModal = document.getElementById('victory-modal');
-const defeatModal = document.getElementById('defeat-modal');
-const drawModal = document.getElementById('draw-modal');
-const promoCodeElement = document.getElementById('promo-code');
-const copyPromoBtn = document.getElementById('copy-promo-btn');
-const playAgainVictoryBtn = document.getElementById('play-again-victory-btn');
-const playAgainDefeatBtn = document.getElementById('play-again-defeat-btn');
-const playAgainDrawBtn = document.getElementById('play-again-draw-btn');
-const playerCard = document.getElementById('player-card');
-const computerCard = document.getElementById('computer-card');
+var cells = document.querySelectorAll('.cell');
+var resetBtn = document.getElementById('reset-btn');
+var victoryModal = document.getElementById('victory-modal');
+var defeatModal = document.getElementById('defeat-modal');
+var drawModal = document.getElementById('draw-modal');
+var promoCodeElement = document.getElementById('promo-code');
+var copyPromoBtn = document.getElementById('copy-promo-btn');
+var playAgainVictoryBtn = document.getElementById('play-again-victory-btn');
+var playAgainDefeatBtn = document.getElementById('play-again-defeat-btn');
+var playAgainDrawBtn = document.getElementById('play-again-draw-btn');
 
 // Winning combinations
-const winningCombinations = [
-    [0, 1, 2],
-    [3, 4, 5],
-    [6, 7, 8],
-    [0, 3, 6],
-    [1, 4, 7],
-    [2, 5, 8],
-    [0, 4, 8],
-    [2, 4, 6]
+var winningCombinations = [
+    [0, 1, 2], [3, 4, 5], [6, 7, 8], // Rows
+    [0, 3, 6], [1, 4, 7], [2, 5, 8], // Columns
+    [0, 4, 8], [2, 4, 6]             // Diagonals
 ];
 
-// Initialize game
+// Initialize game safely
+document.addEventListener('DOMContentLoaded', function () {
+    init();
+});
+
 function init() {
-    // Initialize Telegram Web App features
-    const tg = window.Telegram?.WebApp;
-    if (tg) {
-        tg.expand();
-        tg.enableClosingConfirmation();
-        // Set theme colors
+    // Initialize Telegram Web App features safely
+    if (window.Telegram && window.Telegram.WebApp) {
+        var tg = window.Telegram.WebApp;
+        tg.ready(); // Signal that app is ready
+        tg.expand(); // Expand to full height
+
+        // Enable closing confirmation
+        try {
+            tg.enableClosingConfirmation();
+        } catch (e) {
+            console.log('Closing confirmation not supported');
+        }
+
+        // Set theme colors safely
         if (tg.themeParams) {
-            document.documentElement.style.setProperty('--tg-theme-bg-color', tg.themeParams.bg_color || '#faf8ff');
-            document.documentElement.style.setProperty('--tg-theme-text-color', tg.themeParams.text_color || '#2d3748');
+            if (tg.themeParams.bg_color) {
+                document.documentElement.style.setProperty('--tg-theme-bg-color', tg.themeParams.bg_color);
+            }
+            if (tg.themeParams.text_color) {
+                document.documentElement.style.setProperty('--tg-theme-text-color', tg.themeParams.text_color);
+            }
         }
     }
 
-    cells.forEach(cell => {
+    // Attach event listeners
+    cells.forEach(function (cell) {
         cell.addEventListener('click', handleCellClick);
     });
-    resetBtn.addEventListener('click', resetGame);
-    copyPromoBtn.addEventListener('click', copyPromoCode);
-    playAgainVictoryBtn.addEventListener('click', () => {
-        closeModal(victoryModal);
-        resetGame();
-    });
-    playAgainDefeatBtn.addEventListener('click', () => {
-        closeModal(defeatModal);
-        resetGame();
-    });
-    playAgainDrawBtn.addEventListener('click', () => {
-        closeModal(drawModal);
-        resetGame();
-    });
+
+    if (resetBtn) resetBtn.addEventListener('click', resetGame);
+    if (copyPromoBtn) copyPromoBtn.addEventListener('click', copyPromoCode);
+
+    if (playAgainVictoryBtn) {
+        playAgainVictoryBtn.addEventListener('click', function () {
+            closeModal(victoryModal);
+            resetGame();
+        });
+    }
+
+    if (playAgainDefeatBtn) {
+        playAgainDefeatBtn.addEventListener('click', function () {
+            closeModal(defeatModal);
+            resetGame();
+        });
+    }
+
+    if (playAgainDrawBtn) {
+        playAgainDrawBtn.addEventListener('click', function () {
+            closeModal(drawModal);
+            resetGame();
+        });
+    }
 }
 
 // Handle cell click
 function handleCellClick(e) {
-    const cell = e.target;
-    const index = parseInt(cell.getAttribute('data-index'));
+    var cell = e.target;
+    var index = parseInt(cell.getAttribute('data-index'));
 
     // Prevent player from making a move if:
-    // - Cell is already taken
-    // - Game is not active
-    // - It's computer's turn
-    // - Computer is currently thinking/making a move
     if (board[index] !== '' || !gameActive || currentPlayer === 'O' || computerThinking) {
         return;
     }
@@ -80,10 +96,8 @@ function handleCellClick(e) {
     makeMove(index, 'X');
 
     if (gameActive) {
-        // Set flag to prevent player from making another move
         computerThinking = true;
-
-        setTimeout(() => {
+        setTimeout(function () {
             computerMove();
         }, 500);
     }
@@ -92,14 +106,12 @@ function handleCellClick(e) {
 // Make a move
 function makeMove(index, player) {
     board[index] = player;
-    const cell = cells[index];
-    cell.textContent = player;
-    cell.classList.add('taken', player.toLowerCase());
-
+    cells[index].textContent = player;
+    cells[index].classList.add('taken', player.toLowerCase());
     checkResult();
 }
 
-// Computer move with AI (weakened for better player experience)
+// Computer move
 function computerMove() {
     if (!gameActive) {
         computerThinking = false;
@@ -108,60 +120,72 @@ function computerMove() {
 
     updatePlayerTurn('O');
 
-    let move = -1;
-
-    // 60% chance to make a random move (easier for player to win)
-    // 40% chance to play strategically
-    const playRandom = Math.random() < 0.6;
+    var move = -1;
+    var playRandom = Math.random() < 0.6; // 60% random
 
     if (playRandom) {
-        // Make a random move
-        const availableCells = board.map((cell, index) => cell === '' ? index : null).filter(i => i !== null);
-        move = availableCells[Math.floor(Math.random() * availableCells.length)];
-    } else {
-        // Simplified AI Strategy (weaker than before):
-        // 1. Try to win (only if obvious)
-        // 2. Sometimes block player (50% chance)
-        // 3. Random move otherwise
+        var availableCells = [];
+        board.forEach(function (cell, idx) {
+            if (cell === '') availableCells.push(idx);
+        });
 
-        move = findWinningMove('O');
-
-        // Only block player 50% of the time
-        if (move === -1 && Math.random() < 0.5) {
-            move = findWinningMove('X'); // Block player
-        }
-
-        // If no strategic move, make random move
-        if (move === -1) {
-            const availableCells = board.map((cell, index) => cell === '' ? index : null).filter(i => i !== null);
+        if (availableCells.length > 0) {
             move = availableCells[Math.floor(Math.random() * availableCells.length)];
+        }
+    } else {
+        move = findWinningMove('O');
+        if (move === -1 && Math.random() < 0.5) {
+            move = findWinningMove('X'); // Block
+        }
+        if (move === -1) {
+            var availableCells = [];
+            board.forEach(function (cell, idx) {
+                if (cell === '') availableCells.push(idx);
+            });
+            if (availableCells.length > 0) {
+                move = availableCells[Math.floor(Math.random() * availableCells.length)];
+            }
         }
     }
 
-    setTimeout(() => {
-        makeMove(move, 'O');
-        updatePlayerTurn('X');
-        // Reset flag to allow player to make next move
+    if (move !== -1) {
+        setTimeout(function () {
+            makeMove(move, 'O');
+            updatePlayerTurn('X');
+            computerThinking = false;
+        }, 300);
+    } else {
         computerThinking = false;
-    }, 300);
+    }
 }
 
-// Find winning move for a player
+// Find winning move
 function findWinningMove(player) {
-    for (let combination of winningCombinations) {
-        const [a, b, c] = combination;
-        const values = [board[a], board[b], board[c]];
+    for (var i = 0; i < winningCombinations.length; i++) {
+        var combo = winningCombinations[i];
+        var a = combo[0], b = combo[1], c = combo[2];
+        var values = [board[a], board[b], board[c]];
 
-        if (values.filter(v => v === player).length === 2 && values.includes('')) {
-            return combination[values.indexOf('')];
+        var count = 0;
+        var emptyIndex = -1;
+
+        if (values[0] === player) count++; else if (values[0] === '') emptyIndex = a;
+        if (values[1] === player) count++; else if (values[1] === '') emptyIndex = b;
+        if (values[2] === player) count++; else if (values[2] === '') emptyIndex = c;
+
+        if (count === 2 && emptyIndex !== -1) {
+            return emptyIndex;
         }
     }
     return -1;
 }
 
-// Update player turn indicator
+// Update player turn
 function updatePlayerTurn(player) {
     currentPlayer = player;
+    var playerCard = document.getElementById('player-card');
+    var computerCard = document.getElementById('computer-card');
+
     if (player === 'X') {
         playerCard.classList.add('active');
         computerCard.classList.remove('active');
@@ -171,122 +195,117 @@ function updatePlayerTurn(player) {
     }
 }
 
-// Check game result
+// Check result
 function checkResult() {
-    let roundWon = false;
-    let winningCombination = null;
+    var roundWon = false;
+    var winningCombination = null;
 
-    for (let combination of winningCombinations) {
-        const [a, b, c] = combination;
-        if (board[a] && board[a] === board[b] && board[a] === board[c]) {
+    for (var i = 0; i < winningCombinations.length; i++) {
+        var combo = winningCombinations[i];
+        if (board[combo[0]] && board[combo[0]] === board[combo[1]] && board[combo[0]] === board[combo[2]]) {
             roundWon = true;
-            winningCombination = combination;
+            winningCombination = combo;
             break;
         }
     }
 
     if (roundWon) {
         gameActive = false;
-        computerThinking = false; // Reset flag when game ends
+        computerThinking = false;
         highlightWinningCells(winningCombination);
 
         if (board[winningCombination[0]] === 'X') {
-            setTimeout(() => handleVictory(), 500);
+            setTimeout(handleVictory, 500);
         } else {
-            setTimeout(() => handleDefeat(), 500);
+            setTimeout(handleDefeat, 500);
         }
         return;
     }
 
     if (!board.includes('')) {
         gameActive = false;
-        computerThinking = false; // Reset flag when game ends
-        setTimeout(() => handleDraw(), 500);
+        computerThinking = false;
+        setTimeout(handleDraw, 500);
     }
 }
 
-// Highlight winning cells
 function highlightWinningCells(combination) {
-    combination.forEach(index => {
+    combination.forEach(function (index) {
         cells[index].classList.add('winner');
     });
 }
 
-// Handle victory
 function handleVictory() {
-    const promoCode = generatePromoCode();
+    var promoCode = generatePromoCode();
     promoCodeElement.textContent = promoCode;
     showModal(victoryModal);
 
-    // SECURE WAY: Send data to the bot, let the bot send the message
-    if (window.Telegram?.WebApp) {
-        const data = JSON.stringify({
+    // Send data to Telegram Bot
+    if (window.Telegram && window.Telegram.WebApp && window.Telegram.WebApp.initData) {
+        var data = JSON.stringify({
             type: 'victory',
             promo: promoCode
         });
         window.Telegram.WebApp.sendData(data);
+    } else {
+        // Fallback for PC / Browser
+        console.log('Victory! Promo (Demo Mode):', promoCode);
+        // Optional: Alert user they are in demo mode
+        // alert('Вы победили! В Telegram боте вы бы получили сообщение с промокодом.');
     }
 }
 
-// Handle defeat
 function handleDefeat() {
     showModal(defeatModal);
 
-    // SECURE WAY: Send data to the bot
-    if (window.Telegram?.WebApp) {
-        const data = JSON.stringify({
+    if (window.Telegram && window.Telegram.WebApp && window.Telegram.WebApp.initData) {
+        var data = JSON.stringify({
             type: 'defeat'
         });
         window.Telegram.WebApp.sendData(data);
     }
 }
 
-// Handle draw
 function handleDraw() {
     showModal(drawModal);
 }
 
-// Generate random 5-digit promo code
 function generatePromoCode() {
-    const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
-    let code = '';
-    for (let i = 0; i < 5; i++) {
+    var characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+    var code = '';
+    for (var i = 0; i < 5; i++) {
         code += characters.charAt(Math.floor(Math.random() * characters.length));
     }
     return code;
 }
 
-// Copy promo code to clipboard
 function copyPromoCode() {
-    const code = promoCodeElement.textContent;
-    navigator.clipboard.writeText(code).then(() => {
+    var code = promoCodeElement.textContent;
+    navigator.clipboard.writeText(code).then(function () {
         copyPromoBtn.innerHTML = '<span>Скопировано! ✓</span>';
-        setTimeout(() => {
+        setTimeout(function () {
             copyPromoBtn.innerHTML = '<span>Скопировать промокод</span>';
         }, 2000);
-    }).catch(err => {
+    }).catch(function (err) {
         console.error('Failed to copy:', err);
     });
 }
 
-// Show modal
 function showModal(modal) {
     modal.classList.add('show');
 }
 
-// Close modal
 function closeModal(modal) {
     modal.classList.remove('show');
 }
 
-// Reset game
 function resetGame() {
     board = ['', '', '', '', '', '', '', '', ''];
     gameActive = true;
     currentPlayer = 'X';
-    computerThinking = false; // Reset flag on new game
+    computerThinking = false;
 
-    cells.forEach(cell => {
+    cells.forEach(function (cell) {
         cell.textContent = '';
         cell.classList.remove('taken', 'x', 'o', 'winner');
     });
@@ -294,6 +313,4 @@ function resetGame() {
     updatePlayerTurn('X');
 }
 
-// Initialize game on page load
-init();
 
