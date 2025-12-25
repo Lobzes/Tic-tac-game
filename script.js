@@ -102,6 +102,9 @@ function generateCode() {
 }
 
 function sendData(prize, code) {
+    claimBtn.textContent = "Отправка...";
+    claimBtn.disabled = true;
+
     const data = JSON.stringify({
         type: 'win',
         prize: prize,
@@ -109,10 +112,19 @@ function sendData(prize, code) {
     });
 
     if (tg.initData) {
-        tg.sendData(data);
+        try {
+            tg.sendData(data);
+        } catch (e) {
+            alert("Ошибка отправки: " + e.message);
+            claimBtn.textContent = "Попробовать снова";
+            claimBtn.disabled = false;
+        }
     } else {
         console.log("Sent to TG:", data);
+        alert("Режим демо: Данные не отправлены (откройте в Telegram)");
         modal.classList.remove('show');
+        claimBtn.textContent = "Забрать";
+        claimBtn.disabled = false;
     }
 }
 
