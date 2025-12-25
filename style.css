@@ -30,21 +30,6 @@ body {
 
 .header {
     text-align: center;
-    margin-bottom: 20px;
-}
-
-h1 {
-    font-size: 28px;
-    margin: 0;
-    background: linear-gradient(45deg, #fdcb6e, #ffeaa7);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    text-shadow: 0 4px 10px rgba(253, 203, 110, 0.3);
-}
-
-p {
-    margin: 5px 0 0;
-    opacity: 0.7;
     font-size: 14px;
 }
 
@@ -167,5 +152,6 @@ canvas {
         transform: scale(1);
     }
 }
+
 
 
