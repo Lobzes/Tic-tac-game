@@ -3,112 +3,38 @@
 
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Крестики-нолики - Играй и выигрывай!</title>
-    <meta name="description" content="Стильная игра в крестики-нолики с возможностью выиграть промокод на скидку">
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link
-        href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=Playfair+Display:wght@600;700&display=swap"
-        rel="stylesheet">
-    <link rel="stylesheet" href="style.css">
-    <!-- Telegram Web App SDK -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Колесо Фортуны</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@600;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
 </head>
 
 <body>
-    <div class="background-animation">
-        <div class="bubble"></div>
-        <div class="bubble"></div>
-        <div class="bubble"></div>
-        <div class="bubble"></div>
-        <div class="bubble"></div>
-    </div>
-
     <div class="container">
-        <header class="game-header">
-            <h1 class="game-title">Крестики-нолики</h1>
-            <p class="game-subtitle">Победи и получи промокод на скидку!</p>
-        </header>
-
-        <div class="game-info">
-            <div class="player-info">
-                <div class="player-card active" id="player-card">
-                    <div class="player-icon">✨</div>
-                    <span>Вы</span>
-                </div>
-                <div class="vs-divider">VS</div>
-                <div class="player-card" id="computer-card">
-                    <div class="player-icon">🤖</div>
-                    <span>Компьютер</span>
-                </div>
-            </div>
+        <div class="header">
+            <h1>Испытай удачу!</h1>
+            <p>Крути колесо и забирай призы</p>
         </div>
 
-        <div class="game-board" id="game-board">
-            <div class="cell" data-index="0"></div>
-            <div class="cell" data-index="1"></div>
-            <div class="cell" data-index="2"></div>
-            <div class="cell" data-index="3"></div>
-            <div class="cell" data-index="4"></div>
-            <div class="cell" data-index="5"></div>
-            <div class="cell" data-index="6"></div>
-            <div class="cell" data-index="7"></div>
-            <div class="cell" data-index="8"></div>
+        <div class="wheel-container">
+            <div class="pointer"></div>
+            <canvas id="wheel" width="300" height="300"></canvas>
         </div>
 
-        <div class="game-controls">
-            <button class="btn-primary" id="reset-btn">
-                <span>Новая игра</span>
-                <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
-                    <path
-                        d="M17.5 10C17.5 14.1421 14.1421 17.5 10 17.5C5.85786 17.5 2.5 14.1421 2.5 10C2.5 5.85786 5.85786 2.5 10 2.5C12.0711 2.5 13.9461 3.37764 15.2782 4.79289"
-                        stroke="currentColor" stroke-width="2" stroke-linecap="round" />
-                    <path d="M15 2.5V5.5H12" stroke="currentColor" stroke-width="2" stroke-linecap="round"
-                        stroke-linejoin="round" />
-                </svg>
-            </button>
-            <p style="text-align: center; opacity: 0.5; font-size: 12px; margin-top: 10px;">v2.1 (Fixed)</p>
-        </div>
+        <button id="spin-btn" class="spin-btn">КРУТИТЬ!</button>
     </div>
 
-    <!-- Victory Modal -->
-    <div class="modal" id="victory-modal">
-        <div class="modal-content victory-content">
-            <div class="confetti"></div>
-            <div class="modal-icon victory-icon">🎉</div>
-            <h2 class="modal-title">Поздравляем!</h2>
-            <p class="modal-text">Вы победили! Вот ваш промокод на скидку:</p>
-            <div class="promo-code" id="promo-code">XXXXX</div>
-            <p class="promo-hint">Скопируйте промокод и используйте его при оформлении заказа</p>
-            <button class="btn-primary" id="copy-promo-btn">
-                <span>Скопировать промокод</span>
-            </button>
-            <button class="btn-secondary" id="play-again-victory-btn">Сыграть ещё раз</button>
-        </div>
-    </div>
-
-    <!-- Defeat Modal -->
-    <div class="modal" id="defeat-modal">
-        <div class="modal-content defeat-content">
-            <div class="modal-icon defeat-icon">💪</div>
-            <h2 class="modal-title">Не расстраивайтесь!</h2>
-            <p class="modal-text">В следующий раз обязательно повезёт!</p>
-            <button class="btn-primary" id="play-again-defeat-btn">
-                <span>Попробовать ещё раз</span>
-            </button>
-        </div>
-    </div>
-
-    <!-- Draw Modal -->
-    <div class="modal" id="draw-modal">
-        <div class="modal-content draw-content">
-            <div class="modal-icon draw-icon">🤝</div>
-            <h2 class="modal-title">Ничья!</h2>
-            <p class="modal-text">Отличная игра! Попробуйте ещё раз, чтобы выиграть промокод!</p>
-            <button class="btn-primary" id="play-again-draw-btn">
-                <span>Сыграть ещё раз</span>
-            </button>
+    <!-- Modal -->
+    <div id="modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-icon">🎉</div>
+            <h2 id="modal-title">Победа!</h2>
+            <p id="modal-text">Твой приз:</p>
+            <div id="prize-display" class="prize-text"></div>
+            <p class="modal-sub">Промокод сохранен в боте</p>
+            <button id="claim-btn" class="claim-btn">Забрать</button>
         </div>
     </div>
 
@@ -116,5 +42,6 @@
 </body>
 
 </html>
+
 
 
