@@ -101,6 +101,15 @@ function generateCode() {
     return 'PROMO-' + Math.random().toString(36).substr(2, 5).toUpperCase();
 }
 
+// Debug on startup
+document.addEventListener('DOMContentLoaded', () => {
+    if (window.Telegram && window.Telegram.WebApp) {
+        // alert("Telegram WebApp подключен ✅");
+    } else {
+        alert("Telegram WebApp НЕ найден ❌ (Игра запущена как сайт)");
+    }
+});
+
 function sendData(prize, code) {
     claimBtn.textContent = "Отправка...";
     claimBtn.disabled = true;
@@ -111,22 +120,31 @@ function sendData(prize, code) {
         code: code
     });
 
-    if (tg.initData) {
+    // Пытаемся отправить в любом случае, если есть объект tg
+    if (tg) {
         try {
             tg.sendData(data);
+            // Если это сработало, окно закроется само.
+            // Если нет - через 3 секунды вернем кнопку.
+            setTimeout(() => {
+                alert("Данные отправлены, но окно не закрылось. Попробуйте закрыть вручную.");
+                claimBtn.disabled = false;
+                claimBtn.textContent = "Забрать";
+            }, 3000);
         } catch (e) {
-            alert("Ошибка отправки: " + e.message);
+            alert("Ошибка отправки (tg.sendData): " + e.message);
             claimBtn.textContent = "Попробовать снова";
             claimBtn.disabled = false;
         }
     } else {
         console.log("Sent to TG:", data);
-        alert("Режим демо: Данные не отправлены (откройте в Telegram)");
+        alert("Ошибка: Объект Telegram не найден. Вы точно играете через бота?");
         modal.classList.remove('show');
         claimBtn.textContent = "Забрать";
         claimBtn.disabled = false;
     }
 }
+
 
 
 
