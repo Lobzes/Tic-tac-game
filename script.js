@@ -240,25 +240,34 @@ function handleVictory() {
     promoCodeElement.textContent = promoCode;
     showModal(victoryModal);
 
+    // DEBUG: Alert to check if function runs
+    // alert("Debug: Victory! Checking Telegram...");
+
     // Send data to Telegram Bot
-    if (window.Telegram && window.Telegram.WebApp && window.Telegram.WebApp.initData) {
+    if (window.Telegram && window.Telegram.WebApp) {
+        // alert("Debug: WebApp found. Sending data...");
+
         var data = JSON.stringify({
             type: 'victory',
             promo: promoCode
         });
-        window.Telegram.WebApp.sendData(data);
+
+        try {
+            window.Telegram.WebApp.sendData(data);
+            // alert("Debug: Data sent!");
+        } catch (e) {
+            alert("Error sending data: " + e.message);
+        }
     } else {
         // Fallback for PC / Browser
         console.log('Victory! Promo (Demo Mode):', promoCode);
-        // Optional: Alert user they are in demo mode
-        // alert('Вы победили! В Telegram боте вы бы получили сообщение с промокодом.');
     }
 }
 
 function handleDefeat() {
     showModal(defeatModal);
 
-    if (window.Telegram && window.Telegram.WebApp && window.Telegram.WebApp.initData) {
+    if (window.Telegram && window.Telegram.WebApp) {
         var data = JSON.stringify({
             type: 'defeat'
         });
@@ -312,6 +321,8 @@ function resetGame() {
 
     updatePlayerTurn('X');
 }
+
+
 
 
 
