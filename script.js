@@ -8,6 +8,7 @@ const claimBtn = document.getElementById('claim-btn');
 // Telegram Setup
 const tg = window.Telegram.WebApp;
 tg.expand();
+tg.ready();
 
 // Wheel Config
 const segments = [
@@ -144,6 +145,7 @@ function sendData(prize, code) {
         claimBtn.disabled = false;
     }
 }
+
 
 
 
